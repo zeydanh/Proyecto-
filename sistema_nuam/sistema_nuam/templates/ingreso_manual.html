@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow-lg border-0 mb-4">
+            <div class="card-header bg-primary text-white py-3">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h5 class="m-0 fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i> Ingreso Manual</h5>
+                    <span class="badge bg-white text-primary rounded-pill">HDU 1.1</span>
+                </div>
+            </div>
+            
+            <div class="card-body p-5">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <div class="row g-4">
+                        <div class="col-12">
+                            <label class="form-label fw-bold small text-uppercase text-body-secondary">Razón Social</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-building text-primary"></i></span>
+                                <input type="text" name="razon_social" class="form-control form-control-lg" placeholder="Ej: Transportes del Sur SpA" required>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase text-body-secondary">RUT Cliente</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-id-card text-muted"></i></span>
+                                <input type="text" name="rut" class="form-control" placeholder="12345678-9" required>
+                            </div>
+                            <small class="text-muted ms-1"><i class="fa-solid fa-lock fa-xs me-1"></i> Se encriptará al guardar.</small>
+                        </div>
+
+                        <div class="col-md-6">
+                            <label class="form-label fw-bold small text-uppercase text-body-secondary">Año Tributario</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fa-solid fa-calendar-days text-muted"></i></span>
+                                <input type="number" name="anio" class="form-control" value="2025" required>
+                            </div>
+                        </div>
+
+                        <div class="col-12">
+                            <div class="p-4 rounded border bg-body-tertiary mt-2">
+                                <label class="form-label fw-bold text-success small text-uppercase mb-3">Factor Tributario</label>
+                                <div class="input-group input-group-lg">
+                                    <span class="input-group-text bg-success text-white border-success"><i class="fa-solid fa-percent"></i></span>
+                                    <input type="number" step="0.01" name="factor" class="form-control border-success text-success fw-bold" placeholder="0.85" required>
+                                </div>
+                                <div class="form-text mt-2">Ingrese el valor decimal correspondiente al factor.</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <hr class="my-4">
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{% url 'dashboard' %}" class="btn btn-secondary px-4">Cancelar</a>
+                        <button type="submit" class="btn btn-primary btn-lg px-5 shadow-sm">
+                            <i class="fa-solid fa-floppy-disk me-2"></i> Guardar Registro
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card shadow mb-4">
+    <div class="card-header py-3 d-flex justify-content-between align-items-center bg-body-tertiary">
+        <div>
+            <h5 class="m-0 font-weight-bold text-primary"><i class="fa-solid fa-database me-2"></i> Base de Datos</h5>
+            <p class="m-0 small text-muted">Registro histórico completo</p>
+        </div>
+        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2 rounded-pill border border-success">
+            SQL Activo
+        </span>
+    </div>
+    
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-secondary text-uppercase small fw-bold">
+                    <tr>
+                        <th class="ps-4 py-3">ID / Empresa</th>
+                        <th class="py-3">Año</th>
+                        <th class="py-3">RUT (Encriptado)</th>
+                        <th class="py-3">Factor</th>
+                        <th class="py-3">Creación</th>
+                        <th class="text-end pe-4 py-3">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody class="border-top-0">
+                    {% for item in registros %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-flex align-items-center justify-content-center fw-bold me-3" style="width: 40px; height: 40px;">
+                                    {{ item.razon_social|slice:":1" }}
+                                </div>
+                                <div>
+                                    <div class="fw-bold text-body">{{ item.razon_social }}</div>
+                                    <div class="small text-muted">ID: #{{ item.id }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td><span class="badge bg-secondary bg-opacity-25 text-body border">{{ item.anio }}</span></td>
+                        <td>
+                            <div class="d-flex align-items-center" title="Dato Encriptado">
+                                <i class="fa-solid fa-key text-warning me-2"></i>
+                                <code class="text-muted small">{{ item.rut_cliente|truncatechars:15 }}</code>
+                            </div>
+                        </td>
+                        <td><span class="fw-bold text-success fs-6">{{ item.factor }}</span></td>
+                        <td class="small text-muted">
+                            {{ item.fecha_creacion|date:"d/m/Y" }}
+                        </td>
+                        <td class="text-end pe-4">
+                            <a href="{% url 'eliminar_registro' item.id %}" 
+                               class="btn btn-outline-danger btn-sm rounded-circle shadow-sm"
+                               onclick="return confirm('¿Está seguro?');">
+                                <i class="fa-solid fa-trash"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <i class="fa-solid fa-folder-open fa-3x text-muted mb-3 opacity-50"></i>
+                            <h5>Base de datos vacía</h5>
+                            <a href="{% url 'ingreso_manual' %}" class="btn btn-primary btn-sm mt-3">Crear registro</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="card-footer bg-body-tertiary py-3">
+        <small class="text-muted">Mostrando {{ registros|length }} registros.</small>
+    </div>
+</div>
+{% endblock %}
