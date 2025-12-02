@@ -3,103 +3,125 @@ from django.contrib import messages
 from .models import CalificacionTributaria
 import csv
 import io
+from datetime import datetime
 
-# 1. VISTA DASHBOARD (Inicio)
+# 1. DASHBOARD
 def dashboard(request):
-    """
-    Muestra indicadores generales del sistema.
-    """
     total = CalificacionTributaria.objects.count()
-    # Traemos los últimos 5 registros para mostrar actividad reciente
     ultimos = CalificacionTributaria.objects.order_by('-fecha_creacion')[:5]
-    
-    return render(request, 'dashboard.html', {
-        'total': total,
-        'ultimos': ultimos
-    })
+    return render(request, 'dashboard.html', {'total': total, 'ultimos': ultimos})
 
-# Abre core/views.py y busca la función ingreso_manual
-# Reemplázala con esta versión actualizada:
-
+# 2. INGRESO MANUAL COMPLETO
 def ingreso_manual(request):
     if request.method == 'POST':
-        # Recibimos los 4 datos
-        rut = request.POST.get('rut')
-        razon_social = request.POST.get('razon_social') # <--- NUEVO
-        anio = request.POST.get('anio')                 # <--- NUEVO
-        factor = request.POST.get('factor')
-        
-        if rut and factor:
-            CalificacionTributaria.objects.create(
-                rut_cliente=rut,
-                razon_social=razon_social, # Guardamos Nombre
-                anio=anio,                 # Guardamos Año
-                factor=factor
-            )
-            messages.success(request, '✅ Registro completo guardado exitosamente.')
+        try:
+            # Checkbox: si no está marcado, HTML no envía nada, por eso comparamos con 'on'
+            es_isfut_val = request.POST.get('es_isfut') == 'on'
+            
+            datos = {
+                'rut_cliente': request.POST.get('rut'),
+                'razon_social': request.POST.get('razon_social'),
+                'ejercicio': request.POST.get('ejercicio'),
+                'mercado': request.POST.get('mercado'),
+                'instrumento': request.POST.get('instrumento'),
+                'fecha_pago': request.POST.get('fecha_pago'),
+                'secuencia': request.POST.get('secuencia'),
+                'numero_dividendo': request.POST.get('numero_dividendo'),
+                'tipo_sociedad': request.POST.get('tipo_sociedad'),
+                'valor_historico': request.POST.get('valor_historico'),
+                
+                # Campos adicionales Mockup
+                'descripcion': request.POST.get('descripcion'),
+                'es_isfut': es_isfut_val,
+                'factor_actualizacion': request.POST.get('factor_actualizacion') or 0.0,
+                'origen': 'MANUAL', 
+            }
+
+            # Factores 8 al 37
+            for i in range(8, 38):
+                val = request.POST.get(f'factor_{i}')
+                datos[f'factor_{i}'] = val if val else 0.0
+
+            CalificacionTributaria.objects.create(**datos)
+            
+            messages.success(request, '✅ Registro guardado exitosamente.')
             return redirect('ingreso_manual')
             
+        except Exception as e:
+            messages.error(request, f'❌ Error al guardar: {str(e)}')
+
     return render(request, 'ingreso_manual.html')
 
-# (Opcional) Si tu profesor te pide que la Carga Masiva también tenga estos datos,
-# avísame para modificar esa función también. Por ahora actualizamos el manual.
-# 3. VISTA CARGA MASIVA (HDU 2.1)
+# 3. CARGA MASIVA (CSV)
 def carga_masiva(request):
-    """
-    Procesa un archivo CSV y guarda múltiples registros.
-    Formato esperado: RUT,FACTOR (sin encabezados o saltando la primera fila si falla)
-    """
     if request.method == 'POST' and request.FILES.get('archivo_csv'):
         archivo = request.FILES['archivo_csv']
-        
-        # Decodificamos el archivo para leerlo como texto
         try:
             decoded_file = archivo.read().decode('utf-8')
             io_string = io.StringIO(decoded_file)
             csv_reader = csv.reader(io_string, delimiter=',')
-            
+            next(csv_reader, None) # Saltar encabezado
+
             count = 0
             errores = 0
             
             for row in csv_reader:
-                # Validamos que la fila tenga al menos 2 columnas
-                if len(row) >= 2:
+                # Validamos que tenga al menos las columnas básicas (30 factores + datos generales)
+                if len(row) >= 30: 
                     try:
-                        # Intentamos guardar (El modelo encriptará el RUT)
-                        CalificacionTributaria.objects.create(
-                            rut_cliente=row[0].strip(), 
-                            factor=row[1].strip()
-                        )
+                        fecha_str = row[3].strip() 
+                        fecha_obj = datetime.strptime(fecha_str, '%d-%m-%Y').date()
+
+                        datos_csv = {
+                            'rut_cliente': "GENERICO_MASIVO",
+                            'razon_social': row[2].strip(),
+                            'ejercicio': int(row[0].strip()),
+                            'mercado': row[1].strip(),
+                            'instrumento': row[2].strip(),
+                            'fecha_pago': fecha_obj,
+                            'secuencia': int(row[4].strip()),
+                            'numero_dividendo': int(row[5].strip()),
+                            'tipo_sociedad': row[6].strip(),
+                            'valor_historico': float(row[7].strip() or 0),
+                            
+                            # Defaults para campos nuevos no presentes en CSV 3.1
+                            'descripcion': "Carga Masiva CSV",
+                            'es_isfut': False,
+                            'factor_actualizacion': 0.0,
+                            'origen': "ARCHIVO CSV",
+                        }
+                        
+                        # Mapeo de Factores dinámico del índice 8 en adelante
+                        for i in range(8, 38):
+                            # El índice en CSV es row[8] para factor_8, row[9] para factor_9...
+                            # Como el rango es exacto, podemos usar 'i' directamente
+                            val = row[i].strip() if i < len(row) else 0
+                            datos_csv[f'factor_{i}'] = float(val or 0)
+
+                        CalificacionTributaria.objects.create(**datos_csv)
                         count += 1
                     except Exception as e:
                         errores += 1
-                        continue # Si una fila falla, seguimos con la siguiente
+                        continue
             
             if count > 0:
-                messages.success(request, f'📂 Carga finalizada: {count} registros importados correctamente.')
+                messages.success(request, f'📂 Carga finalizada: {count} registros importados.')
             if errores > 0:
-                messages.warning(request, f'⚠️ Algunos registros ({errores}) no se pudieron leer.')
+                messages.warning(request, f'⚠️ {errores} registros fallaron.')
                 
             return redirect('carga_masiva')
 
         except Exception as e:
-            messages.error(request, '❌ Error al leer el archivo. Asegúrese de que sea un CSV válido.')
+            messages.error(request, '❌ Error crítico al leer el archivo.')
 
     return render(request, 'carga_masiva.html')
 
-# 4. VISTA LISTADO (Auditoría)
+# 4. LISTADO y ELIMINAR
 def listado(request):
-    """
-    Muestra todos los registros de la base de datos SQL.
-    """
     registros = CalificacionTributaria.objects.all().order_by('-fecha_creacion')
     return render(request, 'listado.html', {'registros': registros})
 
-# 5. VISTA ELIMINAR REGISTRO (CRUD: Delete)
 def eliminar_registro(request, id):
-    """
-    Busca un registro por su ID y lo elimina de la base de datos.
-    """
     registro = get_object_or_404(CalificacionTributaria, id=id)
     registro.delete()
     messages.success(request, '🗑️ Registro eliminado correctamente.')

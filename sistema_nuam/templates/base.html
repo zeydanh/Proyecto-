@@ -1,29 +1,232 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es" data-bs-theme="light">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NUAM | Sistema Tributario</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            /* Variables Modo Claro (Default) */
+            --primary-color: #4e73df;
+            --sidebar-bg: linear-gradient(180deg, #4e73df 10%, #224abe 100%);
+            --card-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+            --content-bg: #f8f9fc;
+        }
+
+        /* Variables Específicas Modo Oscuro */
+        [data-bs-theme="dark"] {
+            --primary-color: #375a7f;
+            --sidebar-bg: linear-gradient(180deg, #1a202c 10%, #000000 100%);
+            --card-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            --content-bg: #121212;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--content-bg);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            background: var(--sidebar-bg);
+            min-height: 100vh;
+            width: 250px;
+            transition: all 0.3s;
+            box-shadow: 4px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar-brand {
+            font-weight: 700;
+            font-size: 1.4rem;
+            letter-spacing: 1px;
+            color: white !important;
+            text-transform: uppercase;
+            padding: 1.5rem 1rem;
+            text-align: center;
+        }
+
+        .nav-link {
+            color: rgba(255,255,255,0.75) !important;
+            margin: 5px 15px;
+            border-radius: 10px;
+            transition: all 0.2s ease;
+            font-weight: 500;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: #4e73df !important;
+            background-color: white;
+            transform: translateX(5px);
+            font-weight: 600;
+        }
+        
+        /* En modo oscuro, el link activo se ve un poco diferente para no brillar tanto */
+        [data-bs-theme="dark"] .nav-link:hover, 
+        [data-bs-theme="dark"] .nav-link.active {
+            color: #1a202c !important;
+            background-color: #e2e8f0;
+        }
+
+        .nav-link i {
+            width: 25px;
+            text-align: center;
+            margin-right: 8px;
+        }
+
+        /* Card Global Styling */
+        .card {
+            border: none;
+            border-radius: 15px;
+            box-shadow: var(--card-shadow);
+            transition: transform 0.2s;
+            margin-bottom: 1.5rem;
+        }
+
+        .card-header {
+            border-bottom: 1px solid rgba(0,0,0,0.1);
+            border-radius: 15px 15px 0 0 !important;
+            padding: 1rem 1.5rem;
+            font-weight: 700;
+        }
+        
+        [data-bs-theme="dark"] .card-header {
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .btn {
+            border-radius: 8px;
+            font-weight: 500;
+            padding: 0.5rem 1.2rem;
+        }
+
+        .content-wrapper {
+            width: 100%;
+            padding: 1.5rem;
+            overflow-y: auto;
+            max-height: 100vh;
+        }
+        
+        /* Input groups adjustments for Dark Mode */
+        [data-bs-theme="dark"] .input-group-text {
+            background-color: #2d3748;
+            border-color: #4a5568;
+            color: #e2e8f0;
+        }
+        
+        [data-bs-theme="dark"] .form-control {
+            background-color: #1a202c;
+            border-color: #4a5568;
+            color: #fff;
+        }
+        
+        [data-bs-theme="dark"] .form-control::placeholder {
+            color: #718096;
+        }
+    </style>
 </head>
-<body class="bg-light">
+<body>
     <div class="d-flex">
-        <div class="bg-dark text-white p-3 vh-100" style="width: 250px;">
-            <h4><i class="fa-solid fa-building"></i> NUAM</h4>
-            <hr>
-            <a href="{% url 'dashboard' %}" class="text-white d-block p-2 text-decoration-none"><i class="fa fa-home"></i> Inicio</a>
-            <a href="{% url 'ingreso_manual' %}" class="text-white d-block p-2 text-decoration-none"><i class="fa fa-pen"></i> Ingreso Manual</a>
-            <a href="{% url 'carga_masiva' %}" class="text-white d-block p-2 text-decoration-none"><i class="fa fa-upload"></i> Carga Masiva</a>
-            <a href="{% url 'listado' %}" class="text-white d-block p-2 text-decoration-none"><i class="fa fa-table"></i> Base de Datos</a>
-        </div>
-        <div class="container-fluid p-4">
+        <nav class="sidebar d-flex flex-column flex-shrink-0">
+            <a href="{% url 'dashboard' %}" class="sidebar-brand text-decoration-none">
+                <i class="fa-solid fa-building me-2"></i> NUAM
+            </a>
+            
+            <hr class="mx-3 text-white opacity-50">
+            
+            <ul class="nav nav-pills flex-column mb-auto">
+                <li class="nav-item">
+                    <a href="{% url 'dashboard' %}" class="nav-link {% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                        <i class="fa fa-home"></i> Inicio
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'ingreso_manual' %}" class="nav-link {% if request.resolver_match.url_name == 'ingreso_manual' %}active{% endif %}">
+                        <i class="fa fa-pen"></i> Ingreso Manual
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'carga_masiva' %}" class="nav-link {% if request.resolver_match.url_name == 'carga_masiva' %}active{% endif %}">
+                        <i class="fa fa-upload"></i> Carga Masiva
+                    </a>
+                </li>
+                <li>
+                    <a href="{% url 'listado' %}" class="nav-link {% if request.resolver_match.url_name == 'listado' %}active{% endif %}">
+                        <i class="fa fa-table"></i> Base de Datos
+                    </a>
+                </li>
+            </ul>
+
+            <div class="px-3 mb-3">
+                <button id="themeToggle" class="btn btn-outline-light w-100 d-flex align-items-center justify-content-center opacity-75">
+                    <i class="fa-solid fa-moon me-2" id="themeIcon"></i> 
+                    <span id="themeText">Modo Oscuro</span>
+                </button>
+            </div>
+
+            <div class="p-3 text-white-50 small text-center border-top border-white border-opacity-10">
+                &copy; 2025 NUAM System
+            </div>
+        </nav>
+
+        <div class="content-wrapper">
             {% if messages %}
                 {% for message in messages %}
-                    <div class="alert alert-success">{{ message }}</div>
+                    <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show shadow-sm" role="alert">
+                        {% if message.tags == 'success' %}<i class="fa-solid fa-circle-check me-2"></i>{% endif %}
+                        {% if message.tags == 'error' %}<i class="fa-solid fa-triangle-exclamation me-2"></i>{% endif %}
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
                 {% endfor %}
             {% endif %}
+
             {% block content %}{% endblock %}
         </div>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        const html = document.documentElement;
+        const toggleBtn = document.getElementById('themeToggle');
+        const icon = document.getElementById('themeIcon');
+        const text = document.getElementById('themeText');
+
+        // Función para aplicar tema
+        const setTheme = (theme) => {
+            html.setAttribute('data-bs-theme', theme);
+            localStorage.setItem('theme', theme);
+            
+            if (theme === 'dark') {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                text.textContent = 'Modo Claro';
+                toggleBtn.classList.replace('btn-outline-light', 'btn-light');
+                toggleBtn.classList.add('text-dark');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                text.textContent = 'Modo Oscuro';
+                toggleBtn.classList.replace('btn-light', 'btn-outline-light');
+                toggleBtn.classList.remove('text-dark');
+            }
+        };
+
+        // Cargar preferencia guardada
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        setTheme(savedTheme);
+
+        // Event listener
+        toggleBtn.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-bs-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        });
+    </script>
 </body>
 </html>

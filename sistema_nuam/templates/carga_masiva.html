@@ -3,39 +3,46 @@
 {% block content %}
 <div class="row justify-content-center">
     <div class="col-md-8 col-lg-6">
-        <div class="card shadow border-0">
-            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
-                <h5 class="mb-0"><i class="fa-solid fa-cloud-arrow-up me-2"></i> Carga Masiva</h5>
-                <span class="badge bg-dark">HDU 2.1</span>
+        <div class="card shadow-lg border-0 mt-4">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold"><i class="fa-solid fa-cloud-arrow-up me-2"></i> Carga Masiva CSV</h5>
+                <span class="badge bg-dark text-warning">HDU 2.1</span>
             </div>
+            
             <div class="card-body p-5 text-center">
-                
-                <i class="fa-solid fa-file-csv fa-5x text-secondary mb-4"></i>
-                
-                <h4 class="card-title">Subir Archivo CSV</h4>
-                <p class="card-text text-muted">
-                    El archivo debe tener el formato estricto:<br>
-                    <code>RUT, FACTOR</code> (Separado por comas)
-                </p>
+                <div class="mb-4">
+                    <span class="fa-stack fa-3x mb-3">
+                        <i class="fa-solid fa-circle fa-stack-2x text-body-tertiary"></i>
+                        <i class="fa-solid fa-file-csv fa-stack-1x text-success"></i>
+                    </span>
+                    <h4 class="card-title fw-bold text-body">Subir Archivo de Datos</h4>
+                    <p class="text-muted small">
+                        El archivo debe seguir estrictamente el orden de columnas del Modelo 3.1:<br>
+                        <code>Ejercicio, Mercado, Instrumento, Fecha, Secuencia, Dividendo, Tipo Soc, Valor Hist, Factor 8... Factor 37</code>
+                    </p>
+                </div>
+
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }} text-start small mb-4">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
 
                 <form method="POST" enctype="multipart/form-data" class="mt-4">
                     {% csrf_token %}
-                    
-                    <div class="mb-3 text-start">
-                        <label class="form-label fw-bold">Seleccionar archivo</label>
-                        <input type="file" name="archivo_csv" class="form-control" accept=".csv" required>
+                    <div class="mb-4 text-start">
+                        <label class="form-label fw-bold small text-uppercase text-body-secondary">Seleccionar Archivo</label>
+                        <input type="file" name="archivo_csv" class="form-control form-control-lg" accept=".csv" required>
                     </div>
 
-                    <div class="d-grid mt-4">
-                        <button type="submit" class="btn btn-dark py-2">
-                            <i class="fa-solid fa-gear me-2"></i> Procesar Archivo
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-dark btn-lg py-3 shadow hover-scale">
+                            <i class="fa-solid fa-gears me-2"></i> Procesar Archivo
                         </button>
                     </div>
                 </form>
-
-            </div>
-            <div class="card-footer text-muted text-center small">
-                Sistema validará tipos de datos y encriptará RUTs automáticamente.
             </div>
         </div>
     </div>
