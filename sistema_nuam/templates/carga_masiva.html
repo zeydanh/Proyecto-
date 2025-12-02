@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow border-0">
+            <div class="card-header bg-warning text-dark d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fa-solid fa-cloud-arrow-up me-2"></i> Carga Masiva</h5>
+                <span class="badge bg-dark">HDU 2.1</span>
+            </div>
+            <div class="card-body p-5 text-center">
+                
+                <i class="fa-solid fa-file-csv fa-5x text-secondary mb-4"></i>
+                
+                <h4 class="card-title">Subir Archivo CSV</h4>
+                <p class="card-text text-muted">
+                    El archivo debe tener el formato estricto:<br>
+                    <code>RUT, FACTOR</code> (Separado por comas)
+                </p>
+
+                <form method="POST" enctype="multipart/form-data" class="mt-4">
+                    {% csrf_token %}
+                    
+                    <div class="mb-3 text-start">
+                        <label class="form-label fw-bold">Seleccionar archivo</label>
+                        <input type="file" name="archivo_csv" class="form-control" accept=".csv" required>
+                    </div>
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" class="btn btn-dark py-2">
+                            <i class="fa-solid fa-gear me-2"></i> Procesar Archivo
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+            <div class="card-footer text-muted text-center small">
+                Sistema validará tipos de datos y encriptará RUTs automáticamente.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

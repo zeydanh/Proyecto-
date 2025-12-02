@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fa-solid fa-database me-2"></i> Base de Datos (Auditoría)</h5>
+        <span class="badge bg-light text-primary">SQL Activo</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover mb-0 align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">ID</th>
+                        <th>RUT Cliente (Ley 19.628)</th>
+                        <th>Factor</th>
+                        <th>Fecha Creación</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-end pe-4">Acción</th> </tr>
+                </thead>
+                <tbody>
+                    {% for item in registros %}
+                    <tr>
+                        <td class="ps-4 fw-bold text-muted">#{{ item.id }}</td>
+                        <td>
+                            <i class="fa-solid fa-key text-warning me-2" title="Encriptado"></i>
+                            <span class="font-monospace text-secondary">{{ item.rut_cliente }}</span>
+                        </td>
+                        <td>
+                            <span class="fw-bold fs-5">{{ item.factor }}</span>
+                        </td>
+                        <td class="small text-muted">
+                            {{ item.fecha_creacion|date:"d/m/Y H:i" }}
+                        </td>
+                        <td class="text-center">
+                            <span class="badge bg-success rounded-pill">Guardado</span>
+                        </td>
+                        <tr>
+    <th class="ps-4">ID</th>
+    <th>Razón Social</th> <th>Año</th>          <th>RUT (Encriptado)</th>
+    <th>Factor</th>
+    <th>Fecha Creación</th>
+    <th class="text-center">Estado</th>
+    <th class="text-end pe-4">Acción</th>
+</tr>
+
+<tr>
+    <td class="ps-4 fw-bold text-muted">#{{ item.id }}</td>
+    
+    <td class="fw-bold text-primary">{{ item.razon_social }}</td>
+    <td><span class="badge bg-secondary">{{ item.anio }}</span></td>
+    <td>
+        <i class="fa-solid fa-key text-warning me-2"></i>
+        <span class="font-monospace text-secondary">{{ item.rut_cliente }}</span>
+    </td>
+    ```
+
+                        <td class="text-end pe-4">
+                            <a href="{% url 'eliminar_registro' item.id %}" 
+                               class="btn btn-outline-danger btn-sm"
+                               onclick="return confirm('¿Estás SEGURO de eliminar este registro?\nEsta acción no se puede deshacer.');">
+                                <i class="fa-solid fa-trash"></i> Borrar
+                            </a>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="text-muted">
+                                <i class="fa-solid fa-folder-open fa-3x mb-3"></i>
+                                <p>La base de datos está vacía.</p>
+                                <a href="{% url 'ingreso_manual' %}" class="btn btn-sm btn-outline-primary">Agregar primer registro</a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
