@@ -4,7 +4,36 @@
 <div class="card shadow-lg border-0 mt-4">
     <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
         <h5 class="mb-0"><i class="fa-solid fa-table-list me-2"></i> Base de Datos Completa</h5>
-        <span class="badge bg-secondary">{{ registros|length }} Registros</span>
+        <span class="badge bg-secondary">{{ registros|length }} Registros Encontrados</span>
+    </div>
+
+    <div class="card-body bg-light border-bottom p-3">
+        <form method="GET" class="row g-2 align-items-center">
+            <div class="col-md-2">
+                <select name="year" class="form-select">
+                    <option value="">Todos los Años</option>
+                    {% for anio in anios_disponibles %}
+                        <option value="{{ anio }}" {% if request.GET.year == anio|stringformat:"i" %}selected{% endif %}>
+                            {{ anio }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-8">
+                <div class="input-group">
+                    <span class="input-group-text bg-white"><i class="fa-solid fa-magnifying-glass text-muted"></i></span>
+                    <input type="text" name="q" class="form-control" placeholder="Buscar por Instrumento, RUT, Mercado..." value="{{ request.GET.q|default:'' }}">
+                </div>
+            </div>
+            <div class="col-md-2 d-grid gap-2 d-md-flex">
+                <button type="submit" class="btn btn-primary w-100">Filtrar</button>
+                {% if request.GET.year or request.GET.q %}
+                    <a href="{% url 'listado' %}" class="btn btn-outline-secondary w-100" title="Limpiar">
+                        <i class="fa-solid fa-xmark"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </form>
     </div>
     
     <div class="card-body p-0">
@@ -19,11 +48,12 @@
                         <th>Instrumento</th>
                         <th>Descripción</th>
                         <th>Fecha Pago</th>
-                        <th>ISFUT</th>
                         <th class="text-end">Valor Hist.</th>
                         
-                        <th class="text-end bg-secondary text-white">F.8</th>
-                        <th class="text-end bg-secondary text-white">F.9</th>
+                        {% for i in rango_factores %}
+                        <th class="text-end bg-secondary text-white">F.{{ i }}</th>
+                        {% endfor %}
+
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
@@ -43,17 +73,38 @@
                         <td class="fw-bold">{{ item.instrumento }}</td>
                         <td>{{ item.descripcion|default:"-" }}</td>
                         <td>{{ item.fecha_pago|date:"d/m/Y" }}</td>
-                        <td class="text-center">
-                            {% if item.es_isfut %}
-                                <i class="fa-solid fa-check text-success"></i>
-                            {% else %}
-                                <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
                         <td class="text-end">{{ item.valor_historico }}</td>
                         
                         <td class="text-end font-monospace">{{ item.factor_8 }}</td>
                         <td class="text-end font-monospace">{{ item.factor_9 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_10 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_11 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_12 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_13 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_14 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_15 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_16 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_17 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_18 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_19 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_20 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_21 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_22 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_23 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_24 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_25 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_26 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_27 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_28 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_29 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_30 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_31 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_32 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_33 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_34 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_35 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_36 }}</td>
+                        <td class="text-end font-monospace">{{ item.factor_37 }}</td>
                         
                         <td class="text-center">
                             <a href="{% url 'eliminar_registro' item.id %}" 
@@ -65,8 +116,8 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="15" class="text-center py-5 text-muted">
-                            No hay datos.
+                        <td colspan="40" class="text-center py-5 text-muted">
+                            No se encontraron registros.
                         </td>
                     </tr>
                     {% endfor %}

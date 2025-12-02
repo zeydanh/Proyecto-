@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from .models import CalificacionTributaria
+from django.db.models import Q
 import csv
 import io
 from datetime import datetime
@@ -11,13 +12,10 @@ def dashboard(request):
     ultimos = CalificacionTributaria.objects.order_by('-fecha_creacion')[:5]
     return render(request, 'dashboard.html', {'total': total, 'ultimos': ultimos})
 
-# 2. INGRESO MANUAL COMPLETO
+# 2. INGRESO MANUAL
 def ingreso_manual(request):
     if request.method == 'POST':
         try:
-            # Checkbox: si no está marcado, HTML no envía nada, por eso comparamos con 'on'
-            es_isfut_val = request.POST.get('es_isfut') == 'on'
-            
             datos = {
                 'rut_cliente': request.POST.get('rut'),
                 'razon_social': request.POST.get('razon_social'),
@@ -29,10 +27,8 @@ def ingreso_manual(request):
                 'numero_dividendo': request.POST.get('numero_dividendo'),
                 'tipo_sociedad': request.POST.get('tipo_sociedad'),
                 'valor_historico': request.POST.get('valor_historico'),
-                
-                # Campos adicionales Mockup
                 'descripcion': request.POST.get('descripcion'),
-                'es_isfut': es_isfut_val,
+                # ELIMINADO: 'es_isfut'
                 'factor_actualizacion': request.POST.get('factor_actualizacion') or 0.0,
                 'origen': 'MANUAL', 
             }
@@ -52,7 +48,7 @@ def ingreso_manual(request):
 
     return render(request, 'ingreso_manual.html')
 
-# 3. CARGA MASIVA (CSV)
+# 3. CARGA MASIVA
 def carga_masiva(request):
     if request.method == 'POST' and request.FILES.get('archivo_csv'):
         archivo = request.FILES['archivo_csv']
@@ -66,7 +62,6 @@ def carga_masiva(request):
             errores = 0
             
             for row in csv_reader:
-                # Validamos que tenga al menos las columnas básicas (30 factores + datos generales)
                 if len(row) >= 30: 
                     try:
                         fecha_str = row[3].strip() 
@@ -83,18 +78,13 @@ def carga_masiva(request):
                             'numero_dividendo': int(row[5].strip()),
                             'tipo_sociedad': row[6].strip(),
                             'valor_historico': float(row[7].strip() or 0),
-                            
-                            # Defaults para campos nuevos no presentes en CSV 3.1
                             'descripcion': "Carga Masiva CSV",
-                            'es_isfut': False,
+                            # ELIMINADO: 'es_isfut'
                             'factor_actualizacion': 0.0,
                             'origen': "ARCHIVO CSV",
                         }
                         
-                        # Mapeo de Factores dinámico del índice 8 en adelante
                         for i in range(8, 38):
-                            # El índice en CSV es row[8] para factor_8, row[9] para factor_9...
-                            # Como el rango es exacto, podemos usar 'i' directamente
                             val = row[i].strip() if i < len(row) else 0
                             datos_csv[f'factor_{i}'] = float(val or 0)
 
@@ -116,10 +106,35 @@ def carga_masiva(request):
 
     return render(request, 'carga_masiva.html')
 
-# 4. LISTADO y ELIMINAR
+# 4. LISTADO CON FILTROS (CORREGIDO)
 def listado(request):
     registros = CalificacionTributaria.objects.all().order_by('-fecha_creacion')
-    return render(request, 'listado.html', {'registros': registros})
+
+    # Filtro por Año
+    year = request.GET.get('year')
+    if year:
+        registros = registros.filter(ejercicio=year)
+
+    # Búsqueda General
+    q = request.GET.get('q')
+    if q:
+        registros = registros.filter(
+            Q(rut_cliente__icontains=q) |
+            Q(instrumento__icontains=q) |
+            Q(mercado__icontains=q) |
+            Q(descripcion__icontains=q)
+        )
+
+    # Obtener años disponibles
+    anios_disponibles = CalificacionTributaria.objects.values_list('ejercicio', flat=True).distinct().order_by('-ejercicio')
+
+    # --- CAMBIO IMPORTANTE AQUÍ ---
+    # Enviamos el rango de números al template para poder iterar sin usar .split
+    return render(request, 'listado.html', {
+        'registros': registros,
+        'anios_disponibles': anios_disponibles,
+        'rango_factores': range(8, 38)  # <--- ESTO SOLUCIONA EL ERROR
+    })
 
 def eliminar_registro(request, id):
     registro = get_object_or_404(CalificacionTributaria, id=id)
