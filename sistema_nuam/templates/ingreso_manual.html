@@ -1,12 +1,43 @@
 {% extends 'base.html' %}
 
 {% block content %}
+<style>
+    ::placeholder { color: #c4c4c4 !important; opacity: 1; }
+    :-ms-input-placeholder { color: #c4c4c4 !important; }
+    ::-ms-input-placeholder { color: #c4c4c4 !important; }
+
+    /* Ocultar pasos 2 y 3 inicialmente */
+    #paso2, #paso3 { display: none; }
+    
+    /* Animación de entrada */
+    .fade-in { animation: fadeIn 0.4s ease-in-out; }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Estilo para la tabla de resumen */
+    .table-resumen td { padding: 0.3rem 0.5rem; vertical-align: middle; border-color: #f0f0f0; }
+    .bg-resumen { background-color: #f8f9fa; border-radius: 8px; }
+</style>
+
 <div class="row justify-content-center">
     <div class="col-12 col-xl-11">
         <div class="card shadow-lg border-0 mt-4">
-            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
-                <h5 class="mb-0 fw-bold"><i class="fa-solid fa-file-invoice-dollar me-2"></i> Ingreso de Calificación Tributaria</h5>
-                <span class="badge bg-light text-primary">HDU 1.1</span>
+            
+            <div class="card-header bg-primary text-white py-3">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0 fw-bold"><i class="fa-solid fa-file-invoice-dollar me-2"></i> Ingreso de Calificación</h5>
+                    <span class="badge bg-light text-primary">HDU 1.1</span>
+                </div>
+                <div class="progress" style="height: 6px; background-color: rgba(255,255,255,0.3);">
+                    <div id="progressBar" class="progress-bar bg-white" role="progressbar" style="width: 33%; transition: width 0.4s;" aria-valuenow="33" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+                <div class="d-flex justify-content-between text-white small mt-1 px-1">
+                    <span id="labelPaso1" class="fw-bold">1. Datos</span>
+                    <span id="labelPaso2" class="opacity-50">2. Factores</span>
+                    <span id="labelPaso3" class="opacity-50">3. Confirmación</span>
+                </div>
             </div>
             
             <div class="card-body p-4">
@@ -19,124 +50,276 @@
                     {% endfor %}
                 {% endif %}
 
-                <form method="POST">
+                <form method="POST" id="formularioIngreso">
                     {% csrf_token %}
 
-                    <h6 class="text-uppercase fw-bold text-secondary border-bottom pb-2 mb-3">
-                        <i class="fa-solid fa-circle-info me-1"></i> Datos del Instrumento
-                    </h6>
-                    
-                    <div class="row g-3 mb-4">
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold text-muted">RUT Cliente</label>
-                            <input type="text" name="rut" class="form-control" placeholder="Ej: 76.xxx.xxx-K" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold text-muted">Razón Social</label>
-                            <input type="text" name="razon_social" class="form-control" required>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold text-muted">Ejercicio</label>
-                            <input type="number" name="ejercicio" class="form-control" value="2025" required>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold text-muted">Mercado</label>
-                            <input type="text" name="mercado" class="form-control" placeholder="ACN" required>
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold text-muted">Tipo Soc.</label>
-                            <select name="tipo_sociedad" class="form-select">
-                                <option value="A">Abierta (A)</option>
-                                <option value="C">Cerrada (C)</option>
-                            </select>
-                        </div>
+                    <div id="paso1" class="fade-in">
+                        <h6 class="text-uppercase fw-bold text-secondary border-bottom pb-2 mb-3">
+                            <i class="fa-solid fa-pen-to-square me-1"></i> 1. Datos del Instrumento
+                        </h6>
+                        
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-muted">RUT Cliente <span class="text-danger">*</span></label>
+                                <input type="text" name="rut" id="input_rut" class="form-control" placeholder="Ej: 76.xxx.xxx-K" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-muted">Razón Social <span class="text-danger">*</span></label>
+                                <input type="text" name="razon_social" id="input_razon" class="form-control" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-muted">Ejercicio <span class="text-danger">*</span></label>
+                                <input type="number" name="ejercicio" id="input_ejercicio" class="form-control" value="2025" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-muted">Mercado <span class="text-danger">*</span></label>
+                                <input type="text" name="mercado" id="input_mercado" class="form-control" placeholder="ACN" required>
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-muted">Tipo Soc.</label>
+                                <select name="tipo_sociedad" id="input_tipo" class="form-select">
+                                    <option value="A">Abierta (A)</option>
+                                    <option value="C">Cerrada (C)</option>
+                                </select>
+                            </div>
 
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold text-muted">Instrumento</label>
-                            <input type="text" name="instrumento" class="form-control" required>
-                        </div>
-                        <div class="col-md-4">
-                            <label class="form-label small fw-bold text-muted">Descripción</label>
-                            <input type="text" name="descripcion" class="form-control" placeholder="Ej: Dividendo Provisorio">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold text-muted">Secuencia</label>
-                            <input type="number" name="secuencia" class="form-control" value="0">
-                        </div>
-                        <div class="col-md-2">
-                            <label class="form-label small fw-bold text-muted">N° Dividendo</label>
-                            <input type="number" name="numero_dividendo" class="form-control" value="0">
-                        </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted">Instrumento <span class="text-danger">*</span></label>
+                                <input type="text" name="instrumento" id="input_instrumento" class="form-control" required>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="form-label small fw-bold text-muted">Descripción</label>
+                                <input type="text" name="descripcion" id="input_descripcion" class="form-control" placeholder="Ej: Dividendo Provisorio">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-muted">Secuencia</label>
+                                <input type="number" name="secuencia" id="input_secuencia" class="form-control" placeholder="Ej: 123456">
+                            </div>
+                            <div class="col-md-2">
+                                <label class="form-label small fw-bold text-muted">N° Dividendo</label>
+                                <input type="number" name="numero_dividendo" id="input_dividendo" class="form-control" value="0">
+                            </div>
 
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold text-muted">Fecha Pago</label>
-                            <input type="date" name="fecha_pago" class="form-control" required>
-                        </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold text-muted">Valor Histórico</label>
-                            <div class="input-group">
-                                <span class="input-group-text">$</span>
-                                <input type="number" step="0.01" name="valor_historico" class="form-control" placeholder="0.00">
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-muted">Fecha Pago <span class="text-danger">*</span></label>
+                                <input type="date" name="fecha_pago" id="input_fecha" class="form-control" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-muted">Valor Histórico</label>
+                                <div class="input-group">
+                                    <span class="input-group-text">$</span>
+                                    <input type="number" step="0.01" name="valor_historico" id="input_valor" class="form-control" placeholder="0.00">
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <label class="form-label small fw-bold text-muted">Factor Actualiz.</label>
+                                <input type="number" step="0.00000001" name="factor_actualizacion" id="input_factor_act" class="form-control" placeholder="Ej: 1.02500000">
                             </div>
                         </div>
-                        <div class="col-md-3">
-                            <label class="form-label small fw-bold text-muted">Factor Actualiz.</label>
-                            <input type="number" step="0.00000001" name="factor_actualizacion" class="form-control" value="0.0">
+
+                        <div class="d-flex justify-content-end">
+                            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary px-4 me-2">Cancelar</a>
+                            <button type="button" class="btn btn-primary px-4" onclick="irAlPaso(2)">
+                                Siguiente <i class="fa-solid fa-arrow-right ms-2"></i>
+                            </button>
                         </div>
                     </div>
 
-                    <h6 class="text-uppercase fw-bold text-secondary border-bottom pb-2 mb-3 mt-4">
-                        <i class="fa-solid fa-percent me-1"></i> Tabla de Factores (8 - 37)
-                    </h6>
+                    <div id="paso2" class="fade-in">
+                        <h6 class="text-uppercase fw-bold text-secondary border-bottom pb-2 mb-3">
+                            <i class="fa-solid fa-calculator me-1"></i> 2. Ingreso de Factores
+                        </h6>
 
-                    <div class="row g-2 mb-4 bg-light p-3 rounded border">
-                        <div class="col-12 mb-2"><small class="text-muted"><i class="fa-solid fa-triangle-exclamation"></i> Ingrese los factores con hasta 8 decimales.</small></div>
-                        
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 8</label><input type="number" step="0.00000001" name="factor_8" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 9</label><input type="number" step="0.00000001" name="factor_9" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 10</label><input type="number" step="0.00000001" name="factor_10" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 11</label><input type="number" step="0.00000001" name="factor_11" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 12</label><input type="number" step="0.00000001" name="factor_12" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 13</label><input type="number" step="0.00000001" name="factor_13" class="form-control form-control-sm"></div>
-                        
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 14</label><input type="number" step="0.00000001" name="factor_14" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 15</label><input type="number" step="0.00000001" name="factor_15" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 16</label><input type="number" step="0.00000001" name="factor_16" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 17</label><input type="number" step="0.00000001" name="factor_17" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 18</label><input type="number" step="0.00000001" name="factor_18" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 19</label><input type="number" step="0.00000001" name="factor_19" class="form-control form-control-sm"></div>
-                        
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 20</label><input type="number" step="0.00000001" name="factor_20" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 21</label><input type="number" step="0.00000001" name="factor_21" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 22</label><input type="number" step="0.00000001" name="factor_22" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 23</label><input type="number" step="0.00000001" name="factor_23" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 24</label><input type="number" step="0.00000001" name="factor_24" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 25</label><input type="number" step="0.00000001" name="factor_25" class="form-control form-control-sm"></div>
-                        
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 26</label><input type="number" step="0.00000001" name="factor_26" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 27</label><input type="number" step="0.00000001" name="factor_27" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 28</label><input type="number" step="0.00000001" name="factor_28" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 29</label><input type="number" step="0.00000001" name="factor_29" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 30</label><input type="number" step="0.00000001" name="factor_30" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 31</label><input type="number" step="0.00000001" name="factor_31" class="form-control form-control-sm"></div>
-                        
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 32</label><input type="number" step="0.00000001" name="factor_32" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 33</label><input type="number" step="0.00000001" name="factor_33" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 34</label><input type="number" step="0.00000001" name="factor_34" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 35</label><input type="number" step="0.00000001" name="factor_35" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 36</label><input type="number" step="0.00000001" name="factor_36" class="form-control form-control-sm"></div>
-                        <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 37</label><input type="number" step="0.00000001" name="factor_37" class="form-control form-control-sm"></div>
+                        <div class="alert alert-info py-2 small">
+                            <i class="fa-solid fa-circle-info me-2"></i> Ingrese los valores para el cálculo. Los campos vacíos se considerarán como 0.
+                        </div>
+
+                        <div class="row g-2 mb-4 bg-light p-3 rounded border">
+                            <div class="col-12 mb-2"><small class="text-muted fw-bold">Factores (8 al 37):</small></div>
+                            
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 8</label><input type="number" step="0.00000001" name="factor_8" id="f_8" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 9</label><input type="number" step="0.00000001" name="factor_9" id="f_9" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 10</label><input type="number" step="0.00000001" name="factor_10" id="f_10" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 11</label><input type="number" step="0.00000001" name="factor_11" id="f_11" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 12</label><input type="number" step="0.00000001" name="factor_12" id="f_12" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 13</label><input type="number" step="0.00000001" name="factor_13" id="f_13" class="form-control form-control-sm factor-input"></div>
+                            
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 14</label><input type="number" step="0.00000001" name="factor_14" id="f_14" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 15</label><input type="number" step="0.00000001" name="factor_15" id="f_15" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 16</label><input type="number" step="0.00000001" name="factor_16" id="f_16" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 17</label><input type="number" step="0.00000001" name="factor_17" id="f_17" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 18</label><input type="number" step="0.00000001" name="factor_18" id="f_18" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 19</label><input type="number" step="0.00000001" name="factor_19" id="f_19" class="form-control form-control-sm factor-input"></div>
+                            
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 20</label><input type="number" step="0.00000001" name="factor_20" id="f_20" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 21</label><input type="number" step="0.00000001" name="factor_21" id="f_21" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 22</label><input type="number" step="0.00000001" name="factor_22" id="f_22" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 23</label><input type="number" step="0.00000001" name="factor_23" id="f_23" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 24</label><input type="number" step="0.00000001" name="factor_24" id="f_24" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 25</label><input type="number" step="0.00000001" name="factor_25" id="f_25" class="form-control form-control-sm factor-input"></div>
+                            
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 26</label><input type="number" step="0.00000001" name="factor_26" id="f_26" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 27</label><input type="number" step="0.00000001" name="factor_27" id="f_27" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 28</label><input type="number" step="0.00000001" name="factor_28" id="f_28" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 29</label><input type="number" step="0.00000001" name="factor_29" id="f_29" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 30</label><input type="number" step="0.00000001" name="factor_30" id="f_30" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 31</label><input type="number" step="0.00000001" name="factor_31" id="f_31" class="form-control form-control-sm factor-input"></div>
+                            
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 32</label><input type="number" step="0.00000001" name="factor_32" id="f_32" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 33</label><input type="number" step="0.00000001" name="factor_33" id="f_33" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 34</label><input type="number" step="0.00000001" name="factor_34" id="f_34" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 35</label><input type="number" step="0.00000001" name="factor_35" id="f_35" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 36</label><input type="number" step="0.00000001" name="factor_36" id="f_36" class="form-control form-control-sm factor-input"></div>
+                            <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 37</label><input type="number" step="0.00000001" name="factor_37" id="f_37" class="form-control form-control-sm factor-input"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <button type="button" class="btn btn-outline-secondary px-4" onclick="irAlPaso(1)">
+                                <i class="fa-solid fa-arrow-left me-2"></i> Atrás
+                            </button>
+                            <button type="button" class="btn btn-primary px-5 shadow" onclick="irAlPaso(3)">
+                                <i class="fa-solid fa-calculator me-2"></i> Calcular
+                            </button>
+                        </div>
                     </div>
 
-                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
-                        <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary px-4">Cancelar</a>
-                        <button type="submit" class="btn btn-primary px-5 shadow">
-                            <i class="fa-solid fa-save me-2"></i> Guardar Calificación
-                        </button>
+                    <div id="paso3" class="fade-in">
+                        <h6 class="text-uppercase fw-bold text-success border-bottom pb-2 mb-3">
+                            <i class="fa-solid fa-check-circle me-1"></i> 3. Confirmación de Datos
+                        </h6>
+
+                        <div class="alert alert-success py-2 small mb-4">
+                            <i class="fa-solid fa-clipboard-check me-2"></i> Revise los datos calculados. Si todo está correcto, presione "Confirmar e Ingresar".
+                        </div>
+
+                        <div class="bg-resumen p-3 border mb-4">
+                            <h6 class="fw-bold text-dark mb-3 small text-uppercase">Resumen General</h6>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <table class="table table-borderless table-sm table-resumen">
+                                        <tr><td class="text-muted small">RUT Cliente:</td><td class="fw-bold" id="res_rut"></td></tr>
+                                        <tr><td class="text-muted small">Razón Social:</td><td class="fw-bold" id="res_razon"></td></tr>
+                                        <tr><td class="text-muted small">Instrumento:</td><td class="fw-bold" id="res_instrumento"></td></tr>
+                                        <tr><td class="text-muted small">Ejercicio:</td><td class="fw-bold" id="res_ejercicio"></td></tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <table class="table table-borderless table-sm table-resumen">
+                                        <tr><td class="text-muted small">Fecha Pago:</td><td class="fw-bold" id="res_fecha"></td></tr>
+                                        <tr><td class="text-muted small">Monto Histórico:</td><td class="fw-bold" id="res_valor"></td></tr>
+                                        <tr><td class="text-muted small">Factor Act.:</td><td class="fw-bold" id="res_factor_act"></td></tr>
+                                        <tr><td class="text-muted small">Secuencia:</td><td class="fw-bold" id="res_secuencia"></td></tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bg-white p-3 border rounded">
+                            <h6 class="fw-bold text-dark mb-2 small text-uppercase">Factores Ingresados</h6>
+                            <div id="lista-factores-resumen" class="row small text-muted">
+                                </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-outline-secondary px-4" onclick="irAlPaso(2)">
+                                <i class="fa-solid fa-arrow-left me-2"></i> Atrás (Editar)
+                            </button>
+                            <button type="submit" class="btn btn-success px-5 shadow-lg">
+                                <i class="fa-solid fa-database me-2"></i> Confirmar e Ingresar
+                            </button>
+                        </div>
                     </div>
+
                 </form>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    function irAlPaso(paso) {
+        // Referencias a los contenedores
+        const p1 = document.getElementById('paso1');
+        const p2 = document.getElementById('paso2');
+        const p3 = document.getElementById('paso3');
+        const bar = document.getElementById('progressBar');
+        
+        // Labels de progreso
+        const l1 = document.getElementById('labelPaso1');
+        const l2 = document.getElementById('labelPaso2');
+        const l3 = document.getElementById('labelPaso3');
+
+        // Validar Paso 1 antes de salir
+        if (paso > 1) {
+            const inputsP1 = p1.querySelectorAll('input[required], select[required]');
+            let valid = true;
+            inputsP1.forEach(i => { if (!i.checkValidity()) { i.reportValidity(); valid = false; }});
+            if (!valid) return;
+        }
+
+        // Lógica de "Calcular" (Paso 2 -> 3): Preparar Resumen
+        if (paso === 3) {
+            prepararResumen();
+        }
+
+        // Ocultar todos
+        p1.style.display = 'none';
+        p2.style.display = 'none';
+        p3.style.display = 'none';
+
+        // Reset opacity labels
+        l1.className = 'opacity-50';
+        l2.className = 'opacity-50';
+        l3.className = 'opacity-50';
+
+        // Mostrar el correcto y actualizar barra
+        if (paso === 1) {
+            p1.style.display = 'block';
+            bar.style.width = '33%';
+            l1.className = 'fw-bold';
+        } else if (paso === 2) {
+            p2.style.display = 'block';
+            bar.style.width = '66%';
+            l2.className = 'fw-bold';
+        } else if (paso === 3) {
+            p3.style.display = 'block';
+            bar.style.width = '100%';
+            l3.className = 'fw-bold';
+        }
+    }
+
+    function prepararResumen() {
+        // Copiar valores simples
+        document.getElementById('res_rut').innerText = document.getElementById('input_rut').value;
+        document.getElementById('res_razon').innerText = document.getElementById('input_razon').value;
+        document.getElementById('res_instrumento').innerText = document.getElementById('input_instrumento').value;
+        document.getElementById('res_ejercicio').innerText = document.getElementById('input_ejercicio').value;
+        
+        document.getElementById('res_fecha').innerText = document.getElementById('input_fecha').value;
+        document.getElementById('res_valor').innerText = '$ ' + (document.getElementById('input_valor').value || '0.00');
+        document.getElementById('res_factor_act').innerText = document.getElementById('input_factor_act').value || '0.0';
+        document.getElementById('res_secuencia').innerText = document.getElementById('input_secuencia').value || '0';
+
+        // Copiar Factores (Solo los que tienen valor)
+        const contenedorFactores = document.getElementById('lista-factores-resumen');
+        contenedorFactores.innerHTML = ''; // Limpiar
+        
+        let algunFactor = false;
+        // Iterar inputs del 8 al 37
+        for(let i=8; i<=37; i++) {
+            const input = document.getElementById('f_' + i);
+            if(input && input.value && parseFloat(input.value) !== 0) {
+                algunFactor = true;
+                const div = document.createElement('div');
+                div.className = 'col-6 col-md-4 col-lg-3 mb-1';
+                div.innerHTML = `<span class="fw-bold text-dark">F${i}:</span> ${input.value}`;
+                contenedorFactores.appendChild(div);
+            }
+        }
+
+        if(!algunFactor) {
+            contenedorFactores.innerHTML = '<div class="col-12 text-center text-muted fst-italic">No se han ingresado factores (todos en 0).</div>';
+        }
+    }
+</script>
 {% endblock %}

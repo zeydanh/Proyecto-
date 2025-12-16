@@ -16,9 +16,9 @@ class CalificacionTributaria(models.Model):
     tipo_sociedad = models.CharField(max_length=1, choices=[('A', 'Abierta'), ('C', 'Cerrada')], default='A')
     valor_historico = models.DecimalField(max_digits=15, decimal_places=2, default=0.00)
 
-    # --- NUEVOS CAMPOS ---
+    # --- NUEVOS CAMPOS (Mockups / Historias de Usuario) ---
     descripcion = models.CharField(max_length=255, blank=True, null=True, verbose_name="Descripción")
-    # ELIMINADO: es_isfut
+    es_isfut = models.BooleanField(default=False, verbose_name="Acogido a ISFUT")
     factor_actualizacion = models.DecimalField(max_digits=10, decimal_places=8, default=0.0, verbose_name="Factor Actualización")
     origen = models.CharField(max_length=20, default="MANUAL", verbose_name="Origen de Datos")
 
@@ -57,6 +57,7 @@ class CalificacionTributaria(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
 
     def save(self, *args, **kwargs):
+        # Lógica de encriptación de RUT
         try:
             base64.b64decode(self.rut_cliente, validate=True)
         except Exception:
