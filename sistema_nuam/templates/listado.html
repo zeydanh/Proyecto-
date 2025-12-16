@@ -19,11 +19,10 @@
                         <th>Instrumento</th>
                         <th>Descripción</th>
                         <th>Fecha Pago</th>
-                        <th>ISFUT</th>
                         <th class="text-end">Valor Hist.</th>
                         
-                        <th class="text-end bg-secondary text-white">F.8</th>
-                        <th class="text-end bg-secondary text-white">F.9</th>
+                        <th class="text-end table-active text-body">F.8</th>
+                        <th class="text-end table-active text-body">F.9</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
@@ -43,30 +42,30 @@
                         <td class="fw-bold">{{ item.instrumento }}</td>
                         <td>{{ item.descripcion|default:"-" }}</td>
                         <td>{{ item.fecha_pago|date:"d/m/Y" }}</td>
-                        <td class="text-center">
-                            {% if item.es_isfut %}
-                                <i class="fa-solid fa-check text-success"></i>
-                            {% else %}
-                                <span class="text-muted">-</span>
-                            {% endif %}
-                        </td>
                         <td class="text-end">{{ item.valor_historico }}</td>
                         
                         <td class="text-end font-monospace">{{ item.factor_8 }}</td>
                         <td class="text-end font-monospace">{{ item.factor_9 }}</td>
                         
                         <td class="text-center">
+                            <a href="{% url 'editar_registro' item.id %}" 
+                               class="btn btn-sm btn-outline-primary border-0 me-1" 
+                               title="Editar">
+                                <i class="fa-solid fa-pen"></i>
+                            </a>
+                            
                             <a href="{% url 'eliminar_registro' item.id %}" 
                                class="btn btn-sm btn-outline-danger border-0" 
-                               onclick="return confirm('¿Eliminar registro?');">
+                               onclick="return confirm('¿Eliminar registro?');"
+                               title="Eliminar">
                                 <i class="fa-solid fa-trash"></i>
                             </a>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="15" class="text-center py-5 text-muted">
-                            No hay datos.
+                        <td colspan="12" class="text-center py-5 text-muted">
+                            No hay datos disponibles.
                         </td>
                     </tr>
                     {% endfor %}

@@ -1,0 +1,106 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12 col-xl-10">
+        <div class="card shadow-lg border-0 mt-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold"><i class="fa-solid fa-pen-to-square me-2"></i> Editar Registro #{{ r.id }}</h5>
+                <span class="badge bg-light text-primary fw-bold">{{ r.origen }}</span>
+            </div>
+            
+            <div class="card-body p-4">
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    <h6 class="text-primary border-bottom pb-2 mb-3 fw-bold">
+                        <i class="fa-solid fa-file-contract me-2"></i>Datos Generales
+                    </h6>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-body-secondary">RUT Cliente</label>
+                            <input type="text" name="rut" class="form-control" value="{{ r.rut_cliente }}" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-body-secondary">Razón Social</label>
+                            <input type="text" name="razon_social" class="form-control" value="{{ r.razon_social }}" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold text-body-secondary">Ejercicio</label>
+                            <input type="number" name="ejercicio" class="form-control" value="{{ r.ejercicio }}" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold text-body-secondary">Mercado</label>
+                            <input type="text" name="mercado" class="form-control" value="{{ r.mercado }}" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold text-body-secondary">Tipo Soc.</label>
+                            <select name="tipo_sociedad" class="form-select">
+                                <option value="A" {% if r.tipo_sociedad == 'A' %}selected{% endif %}>Abierta (A)</option>
+                                <option value="C" {% if r.tipo_sociedad == 'C' %}selected{% endif %}>Cerrada (C)</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-body-secondary">Instrumento</label>
+                            <input type="text" name="instrumento" class="form-control" value="{{ r.instrumento }}" required>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small fw-bold text-body-secondary">Descripción</label>
+                            <input type="text" name="descripcion" class="form-control" value="{{ r.descripcion|default:'' }}">
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold text-body-secondary">Fecha Pago</label>
+                            <input type="date" name="fecha_pago" class="form-control" value="{{ r.fecha_pago|date:'Y-m-d' }}" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label class="form-label small fw-bold text-body-secondary">Monto Hist.</label>
+                            <input type="number" step="0.01" name="valor_historico" class="form-control" value="{{ r.valor_historico|stringformat:'.2f' }}">
+                        </div>
+                        
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-body-secondary">Factor Act.</label>
+                            <input type="number" step="0.00000001" name="factor_actualizacion" class="form-control" value="{{ r.factor_actualizacion|stringformat:'.8f' }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-body-secondary">Secuencia</label>
+                            <input type="number" name="secuencia" class="form-control" value="{{ r.secuencia }}">
+                        </div>
+                        <div class="col-md-3">
+                            <label class="form-label small fw-bold text-body-secondary">N° Div.</label>
+                            <input type="number" name="numero_dividendo" class="form-control" value="{{ r.numero_dividendo }}">
+                        </div>
+                    </div>
+
+                    <h6 class="text-primary border-bottom pb-2 mb-3 fw-bold">
+                        <i class="fa-solid fa-calculator me-2"></i>Factores (8 - 37)
+                    </h6>
+                    
+                    <div class="bg-body-tertiary p-3 rounded border mb-4">
+                        <div class="row g-2">
+                            {% for f in lista_factores %}
+                            <div class="col-6 col-md-3 col-lg-2">
+                                <label class="x-small text-body-secondary fw-bold">Factor {{ f.num }}</label>
+                                <input type="number" step="0.00000001" name="factor_{{ f.num }}" 
+                                       value="{{ f.valor|stringformat:'.8f' }}" 
+                                       class="form-control form-control-sm font-monospace text-end">
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{% url 'listado' %}" class="btn btn-outline-secondary px-4">
+                            <i class="fa-solid fa-arrow-left me-2"></i>Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary px-5 shadow fw-bold">
+                            <i class="fa-solid fa-floppy-disk me-2"></i>Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

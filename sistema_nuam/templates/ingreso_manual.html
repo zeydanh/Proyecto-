@@ -16,9 +16,16 @@
         to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Estilo para la tabla de resumen */
-    .table-resumen td { padding: 0.3rem 0.5rem; vertical-align: middle; border-color: #f0f0f0; }
-    .bg-resumen { background-color: #f8f9fa; border-radius: 8px; }
+    /* Estilo para la tabla de resumen adaptable */
+    .table-resumen td { padding: 0.3rem 0.5rem; vertical-align: middle; border-color: var(--bs-border-color); }
+    
+    /* Fondo adaptable (Gris claro en Light / Gris oscuro en Dark) */
+    .bg-resumen { background-color: var(--bs-tertiary-bg); border-radius: 8px; }
+    
+    .form-control:disabled, .form-control[readonly] {
+        background-color: var(--bs-secondary-bg);
+        opacity: 1;
+    }
 </style>
 
 <div class="row justify-content-center">
@@ -54,29 +61,29 @@
                     {% csrf_token %}
 
                     <div id="paso1" class="fade-in">
-                        <h6 class="text-uppercase fw-bold text-secondary border-bottom pb-2 mb-3">
+                        <h6 class="text-uppercase fw-bold text-body-secondary border-bottom pb-2 mb-3">
                             <i class="fa-solid fa-pen-to-square me-1"></i> 1. Datos del Instrumento
                         </h6>
                         
                         <div class="row g-3 mb-4">
                             <div class="col-md-3">
-                                <label class="form-label small fw-bold text-muted">RUT Cliente <span class="text-danger">*</span></label>
+                                <label class="form-label small fw-bold text-body-secondary">RUT Cliente <span class="text-danger">*</span></label>
                                 <input type="text" name="rut" id="input_rut" class="form-control" placeholder="Ej: 76.xxx.xxx-K" required>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label small fw-bold text-muted">Razón Social <span class="text-danger">*</span></label>
+                                <label class="form-label small fw-bold text-body-secondary">Razón Social <span class="text-danger">*</span></label>
                                 <input type="text" name="razon_social" id="input_razon" class="form-control" required>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small fw-bold text-muted">Ejercicio <span class="text-danger">*</span></label>
+                                <label class="form-label small fw-bold text-body-secondary">Ejercicio <span class="text-danger">*</span></label>
                                 <input type="number" name="ejercicio" id="input_ejercicio" class="form-control" value="2025" required>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small fw-bold text-muted">Mercado <span class="text-danger">*</span></label>
+                                <label class="form-label small fw-bold text-body-secondary">Mercado <span class="text-danger">*</span></label>
                                 <input type="text" name="mercado" id="input_mercado" class="form-control" placeholder="ACN" required>
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small fw-bold text-muted">Tipo Soc.</label>
+                                <label class="form-label small fw-bold text-body-secondary">Tipo Soc.</label>
                                 <select name="tipo_sociedad" id="input_tipo" class="form-select">
                                     <option value="A">Abierta (A)</option>
                                     <option value="C">Cerrada (C)</option>
@@ -84,35 +91,35 @@
                             </div>
 
                             <div class="col-md-4">
-                                <label class="form-label small fw-bold text-muted">Instrumento <span class="text-danger">*</span></label>
+                                <label class="form-label small fw-bold text-body-secondary">Instrumento <span class="text-danger">*</span></label>
                                 <input type="text" name="instrumento" id="input_instrumento" class="form-control" required>
                             </div>
                             <div class="col-md-4">
-                                <label class="form-label small fw-bold text-muted">Descripción</label>
+                                <label class="form-label small fw-bold text-body-secondary">Descripción</label>
                                 <input type="text" name="descripcion" id="input_descripcion" class="form-control" placeholder="Ej: Dividendo Provisorio">
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small fw-bold text-muted">Secuencia</label>
+                                <label class="form-label small fw-bold text-body-secondary">Secuencia</label>
                                 <input type="number" name="secuencia" id="input_secuencia" class="form-control" placeholder="Ej: 123456">
                             </div>
                             <div class="col-md-2">
-                                <label class="form-label small fw-bold text-muted">N° Dividendo</label>
+                                <label class="form-label small fw-bold text-body-secondary">N° Dividendo</label>
                                 <input type="number" name="numero_dividendo" id="input_dividendo" class="form-control" value="0">
                             </div>
 
                             <div class="col-md-3">
-                                <label class="form-label small fw-bold text-muted">Fecha Pago <span class="text-danger">*</span></label>
+                                <label class="form-label small fw-bold text-body-secondary">Fecha Pago <span class="text-danger">*</span></label>
                                 <input type="date" name="fecha_pago" id="input_fecha" class="form-control" required>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label small fw-bold text-muted">Valor Histórico</label>
+                                <label class="form-label small fw-bold text-body-secondary">Valor Histórico</label>
                                 <div class="input-group">
                                     <span class="input-group-text">$</span>
                                     <input type="number" step="0.01" name="valor_historico" id="input_valor" class="form-control" placeholder="0.00">
                                 </div>
                             </div>
                             <div class="col-md-3">
-                                <label class="form-label small fw-bold text-muted">Factor Actualiz.</label>
+                                <label class="form-label small fw-bold text-body-secondary">Factor Actualiz.</label>
                                 <input type="number" step="0.00000001" name="factor_actualizacion" id="input_factor_act" class="form-control" placeholder="Ej: 1.02500000">
                             </div>
                         </div>
@@ -126,7 +133,7 @@
                     </div>
 
                     <div id="paso2" class="fade-in">
-                        <h6 class="text-uppercase fw-bold text-secondary border-bottom pb-2 mb-3">
+                        <h6 class="text-uppercase fw-bold text-body-secondary border-bottom pb-2 mb-3">
                             <i class="fa-solid fa-calculator me-1"></i> 2. Ingreso de Factores
                         </h6>
 
@@ -134,8 +141,8 @@
                             <i class="fa-solid fa-circle-info me-2"></i> Ingrese los valores para el cálculo. Los campos vacíos se considerarán como 0.
                         </div>
 
-                        <div class="row g-2 mb-4 bg-light p-3 rounded border">
-                            <div class="col-12 mb-2"><small class="text-muted fw-bold">Factores (8 al 37):</small></div>
+                        <div class="row g-2 mb-4 bg-body-tertiary p-3 rounded border">
+                            <div class="col-12 mb-2"><small class="text-body-secondary fw-bold">Factores (8 al 37):</small></div>
                             
                             <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 8</label><input type="number" step="0.00000001" name="factor_8" id="f_8" class="form-control form-control-sm factor-input"></div>
                             <div class="col-6 col-md-3 col-lg-2"><label class="x-small">Factor 9</label><input type="number" step="0.00000001" name="factor_9" id="f_9" class="form-control form-control-sm factor-input"></div>
@@ -193,30 +200,30 @@
                         </div>
 
                         <div class="bg-resumen p-3 border mb-4">
-                            <h6 class="fw-bold text-dark mb-3 small text-uppercase">Resumen General</h6>
+                            <h6 class="fw-bold text-body mb-3 small text-uppercase">Resumen General</h6>
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <table class="table table-borderless table-sm table-resumen">
-                                        <tr><td class="text-muted small">RUT Cliente:</td><td class="fw-bold" id="res_rut"></td></tr>
-                                        <tr><td class="text-muted small">Razón Social:</td><td class="fw-bold" id="res_razon"></td></tr>
-                                        <tr><td class="text-muted small">Instrumento:</td><td class="fw-bold" id="res_instrumento"></td></tr>
-                                        <tr><td class="text-muted small">Ejercicio:</td><td class="fw-bold" id="res_ejercicio"></td></tr>
+                                    <table class="table table-borderless table-sm table-resumen mb-0">
+                                        <tr><td class="text-body-secondary small">RUT Cliente:</td><td class="fw-bold" id="res_rut"></td></tr>
+                                        <tr><td class="text-body-secondary small">Razón Social:</td><td class="fw-bold" id="res_razon"></td></tr>
+                                        <tr><td class="text-body-secondary small">Instrumento:</td><td class="fw-bold" id="res_instrumento"></td></tr>
+                                        <tr><td class="text-body-secondary small">Ejercicio:</td><td class="fw-bold" id="res_ejercicio"></td></tr>
                                     </table>
                                 </div>
                                 <div class="col-md-6">
-                                    <table class="table table-borderless table-sm table-resumen">
-                                        <tr><td class="text-muted small">Fecha Pago:</td><td class="fw-bold" id="res_fecha"></td></tr>
-                                        <tr><td class="text-muted small">Monto Histórico:</td><td class="fw-bold" id="res_valor"></td></tr>
-                                        <tr><td class="text-muted small">Factor Act.:</td><td class="fw-bold" id="res_factor_act"></td></tr>
-                                        <tr><td class="text-muted small">Secuencia:</td><td class="fw-bold" id="res_secuencia"></td></tr>
+                                    <table class="table table-borderless table-sm table-resumen mb-0">
+                                        <tr><td class="text-body-secondary small">Fecha Pago:</td><td class="fw-bold" id="res_fecha"></td></tr>
+                                        <tr><td class="text-body-secondary small">Monto Histórico:</td><td class="fw-bold" id="res_valor"></td></tr>
+                                        <tr><td class="text-body-secondary small">Factor Act.:</td><td class="fw-bold" id="res_factor_act"></td></tr>
+                                        <tr><td class="text-body-secondary small">Secuencia:</td><td class="fw-bold" id="res_secuencia"></td></tr>
                                     </table>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="bg-white p-3 border rounded">
-                            <h6 class="fw-bold text-dark mb-2 small text-uppercase">Factores Ingresados</h6>
-                            <div id="lista-factores-resumen" class="row small text-muted">
+                        <div class="bg-body-tertiary p-3 border rounded">
+                            <h6 class="fw-bold text-body mb-2 small text-uppercase">Factores Ingresados</h6>
+                            <div id="lista-factores-resumen" class="row small text-body-secondary">
                                 </div>
                         </div>
 
@@ -312,13 +319,13 @@
                 algunFactor = true;
                 const div = document.createElement('div');
                 div.className = 'col-6 col-md-4 col-lg-3 mb-1';
-                div.innerHTML = `<span class="fw-bold text-dark">F${i}:</span> ${input.value}`;
+                div.innerHTML = `<span class="fw-bold text-body">F${i}:</span> ${input.value}`;
                 contenedorFactores.appendChild(div);
             }
         }
 
         if(!algunFactor) {
-            contenedorFactores.innerHTML = '<div class="col-12 text-center text-muted fst-italic">No se han ingresado factores (todos en 0).</div>';
+            contenedorFactores.innerHTML = '<div class="col-12 text-center text-body-secondary fst-italic">No se han ingresado factores (todos en 0).</div>';
         }
     }
 </script>

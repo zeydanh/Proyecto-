@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.auth.decorators import login_required # Importante
 from .models import CalificacionTributaria
 from django.db.models import Q
 import csv
@@ -7,12 +8,14 @@ import io
 from datetime import datetime
 
 # 1. DASHBOARD
+@login_required
 def dashboard(request):
     total = CalificacionTributaria.objects.count()
     ultimos = CalificacionTributaria.objects.order_by('-fecha_creacion')[:5]
     return render(request, 'dashboard.html', {'total': total, 'ultimos': ultimos})
 
 # 2. INGRESO MANUAL
+@login_required
 def ingreso_manual(request):
     if request.method == 'POST':
         try:
@@ -32,7 +35,6 @@ def ingreso_manual(request):
                 'origen': 'MANUAL', 
             }
 
-            # Factores 8 al 37
             for i in range(8, 38):
                 val = request.POST.get(f'factor_{i}')
                 datos[f'factor_{i}'] = val if val else 0.0
@@ -47,39 +49,42 @@ def ingreso_manual(request):
 
     return render(request, 'ingreso_manual.html')
 
-# 3. CARGA MASIVA (CORREGIDO SEGÚN EXCEL)
+# 3. CARGA MASIVA (ETAPA 1: VALIDACIÓN)
+@login_required
 def carga_masiva(request):
     if request.method == 'POST' and request.FILES.get('archivo_csv'):
         archivo = request.FILES['archivo_csv']
         try:
-            # decodificamos con utf-8-sig para evitar problemas con BOM de Excel
             decoded_file = archivo.read().decode('utf-8-sig')
             io_string = io.StringIO(decoded_file)
             csv_reader = csv.reader(io_string, delimiter=',')
-            next(csv_reader, None) # Saltar encabezado si existe
+            next(csv_reader, None) # Saltar encabezado
 
-            count = 0
-            errores = 0
+            validos = []
+            errores = []
             
             for row_idx, row in enumerate(csv_reader, start=1):
-                # El Excel define 38 columnas exactas (Indices 0 al 37)
                 if len(row) >= 38: 
                     try:
-                        # Columna 3 es Fecha (DD-MM-AAAA)
-                        fecha_str = row[3].strip() 
+                        fecha_str = row[3].strip()
+                        fecha_fmt = ""
                         try:
-                            fecha_obj = datetime.strptime(fecha_str, '%d-%m-%Y').date()
+                            fecha_obj = datetime.strptime(fecha_str, '%d-%m-%Y')
+                            fecha_fmt = fecha_obj.strftime('%Y-%m-%d')
                         except ValueError:
-                            # Fallback por si acaso viene en formato YYYY-MM-DD
-                            fecha_obj = datetime.strptime(fecha_str, '%Y-%m-%d').date()
+                            try:
+                                fecha_obj = datetime.strptime(fecha_str, '%Y-%m-%d')
+                                fecha_fmt = fecha_obj.strftime('%Y-%m-%d')
+                            except ValueError:
+                                raise ValueError(f"Formato de fecha inválido: '{fecha_str}'")
 
-                        datos_csv = {
-                            'rut_cliente': "GENERICO_MASIVO", # Dato no incluido en CSV
-                            'razon_social': row[2].strip(),   # Usamos Instrumento como Razón Social
+                        item = {
+                            'rut_cliente': "GENERICO_MASIVO",
+                            'razon_social': row[2].strip(),
                             'ejercicio': int(row[0].strip()),
                             'mercado': row[1].strip(),
                             'instrumento': row[2].strip(),
-                            'fecha_pago': fecha_obj,
+                            'fecha_pago': fecha_fmt,
                             'secuencia': int(row[4].strip()),
                             'numero_dividendo': int(row[5].strip()),
                             'tipo_sociedad': row[6].strip(),
@@ -89,48 +94,79 @@ def carga_masiva(request):
                             'origen': "ARCHIVO CSV",
                         }
                         
-                        # Factores del 8 al 37 (Columnas índice 8 a 37 en el CSV)
                         for i in range(8, 38):
                             val_str = row[i].strip() if i < len(row) else 0
                             val_float = float(val_str) if val_str else 0.0
-                            
-                            # Validación lógica opcional (descomentar si se requiere estricto <= 1)
-                            # if val_float > 1.0: val_float = 1.0
-                            
-                            datos_csv[f'factor_{i}'] = val_float
+                            item[f'factor_{i}'] = val_float
 
-                        CalificacionTributaria.objects.create(**datos_csv)
-                        count += 1
+                        validos.append(item)
+
                     except Exception as e:
-                        # print(f"Error fila {row_idx}: {e}") # Para debug en consola
-                        errores += 1
-                        continue
+                        errores.append({
+                            'fila': row_idx + 1,
+                            'error': str(e),
+                            'datos': f"{row[0]} - {row[2]}" if len(row) > 2 else "Fila vacía"
+                        })
                 else:
-                    # Fila con menos columnas de las esperadas
-                    errores += 1
+                    errores.append({
+                        'fila': row_idx + 1,
+                        'error': f"Faltan columnas. Se encontraron {len(row)}.",
+                        'datos': str(row[:3])
+                    })
             
-            if count > 0:
-                messages.success(request, f'📂 Carga finalizada: {count} registros importados.')
-            if errores > 0:
-                messages.warning(request, f'⚠️ {errores} registros fallaron por formato incorrecto.')
-                
-            return redirect('carga_masiva')
+            request.session['carga_validos'] = validos
+            request.session['carga_errores'] = errores
+            return redirect('confirmar_carga')
 
         except Exception as e:
             messages.error(request, f'❌ Error crítico al leer el archivo: {str(e)}')
 
     return render(request, 'carga_masiva.html')
 
-# 4. LISTADO CON FILTROS
+# 3.1. CONFIRMACIÓN (ETAPA 2)
+@login_required
+def confirmar_carga_masiva(request):
+    validos = request.session.get('carga_validos', [])
+    errores = request.session.get('carga_errores', [])
+
+    if request.method == 'POST':
+        if not validos:
+            messages.warning(request, "No hay registros válidos para insertar.")
+            return redirect('carga_masiva')
+            
+        try:
+            objs = []
+            for item in validos:
+                fecha_obj = datetime.strptime(item['fecha_pago'], '%Y-%m-%d').date()
+                item['fecha_pago'] = fecha_obj
+                objs.append(CalificacionTributaria(**item))
+            
+            CalificacionTributaria.objects.bulk_create(objs)
+            
+            if 'carga_validos' in request.session: del request.session['carga_validos']
+            if 'carga_errores' in request.session: del request.session['carga_errores']
+            
+            messages.success(request, f'✅ Se insertaron correctamente {len(objs)} registros.')
+            return redirect('listado')
+            
+        except Exception as e:
+            messages.error(request, f'❌ Error final al guardar: {str(e)}')
+
+    return render(request, 'confirmar_carga.html', {
+        'validos': validos,
+        'errores': errores,
+        'total_validos': len(validos),
+        'total_errores': len(errores)
+    })
+
+# 4. LISTADO
+@login_required
 def listado(request):
     registros = CalificacionTributaria.objects.all().order_by('-fecha_creacion')
-
-    # Filtro por Año
+    
     year = request.GET.get('year')
-    if year:
-        registros = registros.filter(ejercicio=year)
-
-    # Búsqueda General
+    if year: registros = registros.filter(ejercicio=year)
+    
     q = request.GET.get('q')
     if q:
         registros = registros.filter(
@@ -140,17 +176,61 @@ def listado(request):
             Q(descripcion__icontains=q)
         )
 
-    # Obtener años disponibles
     anios_disponibles = CalificacionTributaria.objects.values_list('ejercicio', flat=True).distinct().order_by('-ejercicio')
 
     return render(request, 'listado.html', {
         'registros': registros,
         'anios_disponibles': anios_disponibles,
-        'rango_factores': range(8, 38)  # Necesario para iterar las columnas en el HTML
     })
 
+# 5. ELIMINAR
+@login_required
 def eliminar_registro(request, id):
     registro = get_object_or_404(CalificacionTributaria, id=id)
     registro.delete()
     messages.success(request, '🗑️ Registro eliminado correctamente.')
     return redirect('listado')
+
+# 6. EDITAR
+@login_required
+def editar_registro(request, id):
+    registro = get_object_or_404(CalificacionTributaria, id=id)
+
+    if request.method == 'POST':
+        try:
+            registro.rut_cliente = request.POST.get('rut')
+            registro.razon_social = request.POST.get('razon_social')
+            registro.ejercicio = request.POST.get('ejercicio')
+            registro.mercado = request.POST.get('mercado')
+            registro.instrumento = request.POST.get('instrumento')
+            registro.descripcion = request.POST.get('descripcion')
+            
+            registro.fecha_pago = request.POST.get('fecha_pago')
+            registro.secuencia = request.POST.get('secuencia') or 0
+            registro.numero_dividendo = request.POST.get('numero_dividendo') or 0
+            registro.tipo_sociedad = request.POST.get('tipo_sociedad')
+            registro.valor_historico = request.POST.get('valor_historico') or 0.0
+            registro.factor_actualizacion = request.POST.get('factor_actualizacion') or 0.0
+            
+            for i in range(8, 38):
+                val = request.POST.get(f'factor_{i}')
+                setattr(registro, f'factor_{i}', val if val else 0.0)
+
+            registro.save()
+            messages.success(request, '✏️ Registro actualizado correctamente.')
+            return redirect('listado')
+
+        except Exception as e:
+            messages.error(request, f'❌ Error al actualizar: {str(e)}')
+
+    lista_factores = []
+    for i in range(8, 38):
+        lista_factores.append({
+            'num': i,
+            'valor': getattr(registro, f'factor_{i}')
+        })
+
+    return render(request, 'editar_registro.html', {
+        'r': registro,
+        'lista_factores': lista_factores 
+    })

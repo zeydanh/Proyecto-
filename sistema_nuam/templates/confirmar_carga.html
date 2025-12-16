@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-12">
+        <div class="card shadow-lg border-0 mt-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center py-3">
+                <h5 class="mb-0 fw-bold"><i class="fa-solid fa-clipboard-check me-2"></i> Confirmación de Carga</h5>
+                <div>
+                    <span class="badge bg-success border border-light">Correctos: {{ total_validos }}</span>
+                    <span class="badge bg-danger border border-light">Errores: {{ total_errores }}</span>
+                </div>
+            </div>
+            
+            <div class="card-body p-4">
+                
+                <div class="alert alert-info border-info small">
+                    <i class="fa-solid fa-circle-info me-2"></i> Por favor revise el detalle. Los registros correctos no se guardarán hasta que presione el botón de confirmar al final.
+                </div>
+
+                {% if total_errores > 0 %}
+                <div class="card border-danger mb-4">
+                    <div class="card-header bg-danger text-white py-2">
+                        <h6 class="mb-0 fw-bold"><i class="fa-solid fa-triangle-exclamation me-2"></i> Registros con Errores (No se cargarán)</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 300px;">
+                            <table class="table table-hover table-striped mb-0 small">
+                                <thead class="table-danger">
+                                    <tr>
+                                        <th class="text-center" style="width: 80px;">Fila #</th>
+                                        <th>Datos Identificados</th>
+                                        <th>Explicación del Error</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for err in errores %}
+                                    <tr>
+                                        <td class="fw-bold text-center">{{ err.fila }}</td>
+                                        <td class="text-muted fst-italic">{{ err.datos }}</td>
+                                        <td class="text-danger fw-bold">
+                                            <i class="fa-solid fa-xmark me-1"></i> {{ err.error }}
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                    {% if total_validos > 0 %}
+                    <div class="alert alert-success small mb-4">
+                        <i class="fa-solid fa-check-double me-2"></i> ¡Excelente! El archivo no contiene errores de formato.
+                    </div>
+                    {% endif %}
+                {% endif %}
+
+                {% if total_validos > 0 %}
+                <div class="card border-success mb-4">
+                    <div class="card-header bg-success text-white py-2">
+                        <h6 class="mb-0 fw-bold"><i class="fa-solid fa-database me-2"></i> Registros Válidos (Listos para insertar)</h6>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive" style="max-height: 400px;">
+                            <table class="table table-hover table-striped mb-0 small align-middle">
+                                <thead class="table-success">
+                                    <tr>
+                                        <th>Ejercicio</th>
+                                        <th>Instrumento</th>
+                                        <th>Fecha Pago</th>
+                                        <th>N° Div.</th>
+                                        <th class="text-end">Monto</th>
+                                        <th class="text-center">Estado</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in validos %}
+                                    <tr>
+                                        <td>{{ item.ejercicio }}</td>
+                                        <td class="fw-bold">{{ item.instrumento }}</td>
+                                        <td>{{ item.fecha_pago }}</td> <td>{{ item.numero_dividendo }}</td>
+                                        <td class="text-end font-monospace">{{ item.valor_historico }}</td>
+                                        <td class="text-center"><span class="badge bg-success">OK</span></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
+                    <div class="alert alert-warning text-center">
+                        No se encontraron registros válidos en el archivo. Revise el formato.
+                    </div>
+                {% endif %}
+
+                <form method="POST" action="{% url 'confirmar_carga' %}">
+                    {% csrf_token %}
+                    <div class="d-flex justify-content-between align-items-center mt-4">
+                        <a href="{% url 'carga_masiva' %}" class="btn btn-outline-secondary">
+                            <i class="fa-solid fa-arrow-left me-2"></i> Cancelar / Subir Otro
+                        </a>
+
+                        {% if total_validos > 0 %}
+                            {% if total_errores > 0 %}
+                                <div class="d-flex align-items-center">
+                                    <span class="text-danger small me-3 fw-bold text-end lh-1">
+                                        Se ignorarán {{ total_errores }} filas con error.<br>
+                                        Solo se guardarán los correctos.
+                                    </span>
+                                    <button type="submit" class="btn btn-warning px-4 shadow fw-bold">
+                                        <i class="fa-solid fa-cloud-arrow-up me-2"></i> Insertar SOLO los Correctos
+                                    </button>
+                                </div>
+                            {% else %}
+                                <button type="submit" class="btn btn-primary px-5 shadow fw-bold">
+                                    <i class="fa-solid fa-check me-2"></i> Confirmar e Insertar Todo
+                                </button>
+                            {% endif %}
+                        {% else %}
+                            <button type="button" class="btn btn-secondary px-4" disabled>
+                                Nada para guardar
+                            </button>
+                        {% endif %}
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
